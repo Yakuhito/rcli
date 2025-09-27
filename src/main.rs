@@ -16,8 +16,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Verifies the first address was derived correctly
-    VerifyAddress {},
+    /// Verifies Sage RPC connection and fetches the connected wallet's first address
+    Ping {},
 }
 
 #[tokio::main]
@@ -25,7 +25,7 @@ async fn main() {
     let args = Cli::parse();
 
     let res = match args.command {
-        Commands::VerifyAddress {} => verify_address().await,
+        Commands::Ping {} => cli_ping().await,
     };
 
     if let Err(err) = res {
