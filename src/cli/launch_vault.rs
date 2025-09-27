@@ -28,7 +28,7 @@ pub async fn cli_launch_vault(fee_str: String, testnet11: bool) -> Result<(), Cl
     );
 
     let offer_resp = wallet
-        .make_offer(assets_xch_only(1), no_assets(), fee, None, None, true)
+        .make_offer(no_assets(), assets_xch_only(1), fee, None, None, true)
         .await?;
     println!("Offer with id {} created", offer_resp.offer_id);
 
