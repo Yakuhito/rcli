@@ -33,6 +33,7 @@ pub async fn cli_revoke(
     let launcher_id = hex_string_to_bytes32(&launcher_id_str)?;
     let fee = parse_amount(&fee_str, false)?;
     let coin_ids = coin_ids_str
+        .replace("0x", "")
         .split(',')
         .map(hex_string_to_bytes32)
         .collect::<Result<Vec<Bytes32>, CliError>>()?;
@@ -81,7 +82,7 @@ pub async fn cli_revoke(
         );
         let Some(parent_spend) = client
             .get_puzzle_and_solution(
-                coin_record.coin.coin_id(),
+                coin_record.coin.parent_coin_info,
                 Some(coin_record.confirmed_block_index),
             )
             .await?
@@ -129,10 +130,7 @@ pub async fn cli_revoke(
     let offer_resp = wallet
         .make_offer(no_assets(), assets_xch_only(1), fee, None, None, true)
         .await?;
-    println!(
-        "Offer with id {} created.",
-        hex::encode(offer_resp.offer_id)
-    );
+    println!("Offer with id {} created.", offer_resp.offer_id);
 
     // Create security coin
     let offer = Offer::from_spend_bundle(&mut ctx, &decode_offer(&offer_resp.offer)?)?;

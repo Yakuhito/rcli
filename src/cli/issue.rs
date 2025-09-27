@@ -68,10 +68,7 @@ pub async fn cli_issue(
             true,
         )
         .await?;
-    println!(
-        "Offer with id {} created.",
-        hex::encode(offer_resp.offer_id)
-    );
+    println!("Offer with id {} created.", offer_resp.offer_id);
 
     // Create security coin
     let offer = Offer::from_spend_bundle(&mut ctx, &decode_offer(&offer_resp.offer)?)?;
