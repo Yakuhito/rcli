@@ -1,10 +1,10 @@
-use chia::protocol::{Bytes32, Coin, SpendBundle};
+use chia::protocol::{Bytes, Bytes32, Coin, SpendBundle};
 use chia_puzzle_types::{Memos, cat::CatArgs, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     coinset::ChiaRpcClient,
     driver::{
-        Cat, CatInfo, CatSpend, Layer, Offer, P2DelegatedBySingletonLayer, SingletonInfo, Spend,
-        SpendContext, create_security_coin, decode_offer, spend_security_coin,
+        Cat, CatInfo, CatSpend, Layer, Offer, SingletonInfo, Spend, SpendContext,
+        create_security_coin, decode_offer, spend_security_coin,
     },
     prelude::ToTreeHash,
     test::print_spend_bundle_to_file,
@@ -15,11 +15,11 @@ use chia_wallet_sdk::{
     utils::Address,
 };
 use clvm_traits::clvm_quote;
-use clvmr::NodePtr;
+use clvmr::{NodePtr, serde::node_to_bytes};
 use slot_machine::{
     CliError, MultisigSingleton, SageClient, assets_xch_only, get_coinset_client, get_constants,
-    get_prefix, hex_string_to_bytes32, no_assets, parse_amount, sync_multisig_singleton,
-    wait_for_coin,
+    get_prefix, hex_string_to_bytes32, hex_string_to_signature, no_assets, parse_amount,
+    sync_multisig_singleton, wait_for_coin,
 };
 
 use crate::{
@@ -53,7 +53,7 @@ pub async fn cli_issue_cat(
     println!("CAT asset id: {:}", hex::encode(asset_id));
 
     let singleton_struct_hash: Bytes32 = SingletonStruct::new(launcher_id).tree_hash().into();
-    let hidden_puzzle = P2DelegatedBySingletonLayer::new(singleton_struct_hash, 0);
+    // let hidden_puzzle = P2DelegatedBySingletonLayer::new(singleton_struct_hash, 0);
     let hidden_puzzle_hash: Bytes32 =
         P2DelegatedBySingletonLayerArgs::curry_tree_hash(singleton_struct_hash, 0).into();
     println!("Hidden puzzle hash: {:}", hex::encode(hidden_puzzle_hash));
@@ -74,10 +74,14 @@ pub async fn cli_issue_cat(
         hex::encode(offer_resp.offer_id)
     );
 
+    // Create security coin
     let offer = Offer::from_spend_bundle(&mut ctx, &decode_offer(&offer_resp.offer)?)?;
     let (security_sk, security_coin) =
         create_security_coin(&mut ctx, offer.offered_coins().xch[0])?;
 
+    // Spend security coin, which will create the eve CAT and assert it's spent
+    // To do that, we need the eve CAT's full puzzle hash
+    // The inner puzzle of the eve CAT just sends the whole amount to the user's address
     let layer = get_first_address(&wallet).await?;
     let user_ph: Bytes32 = layer.tree_hash().into();
     println!(
@@ -114,6 +118,7 @@ pub async fn cli_issue_cat(
         get_constants(testnet11),
     )?;
 
+    // Spend eve CAT
     let _ = Cat::spend_all(
         &mut ctx,
         &[CatSpend::new(
@@ -130,7 +135,42 @@ pub async fn cli_issue_cat(
         )],
     )?;
 
-    let sb = offer.take(SpendBundle::new(ctx.take(), security_coin_sig));
+    // Spend vault - which needs to send a message to the eve CAT
+    //  to approve issuance
+    let message_ptr = ctx.alloc(&cat_amount)?;
+    let receiver_coin_id = ctx.alloc(&eve_cat_coin.coin_id())?;
+    let vault_hint = ctx.hint(launcher_id)?;
+    let conditions = Conditions::new()
+        .send_message(
+            23,
+            Bytes::from(node_to_bytes(&ctx, message_ptr)?),
+            vec![receiver_coin_id],
+        )
+        .create_coin(
+            vault.info.inner_puzzle_hash().into(),
+            vault.coin.amount,
+            vault_hint,
+        );
+    vault.spend(
+        &mut ctx,
+        &[layer.synthetic_key],
+        conditions,
+        get_constants(testnet11).genesis_challenge,
+    )?;
+
+    // Sign vault spend using wallet
+    let spends = ctx.take();
+    let vault_spend = spends.last().unwrap().clone();
+    let vault_sig = hex_string_to_signature(
+        &wallet
+            .sign_coin_spends(vec![vault_spend], false, true)
+            .await?
+            .spend_bundle
+            .aggregated_signature,
+    )?;
+
+    // Assemble final bundle and submit
+    let sb = offer.take(SpendBundle::new(spends, security_coin_sig + &vault_sig));
 
     println!("Submitting transaction...");
     print_spend_bundle_to_file(
