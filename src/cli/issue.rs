@@ -26,7 +26,7 @@ use crate::{
     EverythingWithSingletonTailArgs, EverythingWithSingletonTailSolution, get_first_address,
 };
 
-pub async fn cli_issue_cat(
+pub async fn cli_issue(
     launcher_id_str: String,
     cat_amount_str: String,
     fee_str: String,

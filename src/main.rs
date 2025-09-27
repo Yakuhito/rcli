@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use rcli::{cli_issue_cat, cli_launch_vault, cli_ping};
+use rcli::{cli_issue, cli_launch_vault, cli_ping};
 
 #[derive(Parser)]
 #[command(
@@ -29,7 +29,7 @@ enum Commands {
     },
 
     /// Issue more of the vault rCAT
-    IssueCat {
+    Issue {
         /// The vault launcher id
         #[arg(long)]
         launcher_id: String,
@@ -55,12 +55,12 @@ async fn main() {
     let res = match args.command {
         Commands::Ping {} => cli_ping().await,
         Commands::LaunchVault { fee, testnet11 } => cli_launch_vault(fee, testnet11).await,
-        Commands::IssueCat {
+        Commands::Issue {
             launcher_id,
             cat_amount,
             fee,
             testnet11,
-        } => cli_issue_cat(launcher_id, cat_amount, fee, testnet11).await,
+        } => cli_issue(launcher_id, cat_amount, fee, testnet11).await,
     };
 
     if let Err(err) = res {
