@@ -9,7 +9,9 @@ use chia_wallet_sdk::{
     prelude::ToTreeHash,
     types::{
         Conditions, Mod,
-        puzzles::{P2DelegatedBySingletonLayerArgs, P2DelegatedBySingletonLayerSolution},
+        puzzles::{
+            P2DelegatedBySingletonLayerArgs, P2DelegatedBySingletonLayerSolution, RevocationArgs,
+        },
     },
     utils::Address,
 };
@@ -75,6 +77,12 @@ pub async fn cli_revoke(
     let mut total_cat_amount = 0;
     let mut cats: Vec<Cat> = Vec::with_capacity(coin_ids_len);
     for coin_record in coin_records {
+        if coin_record.spent {
+            return Err(CliError::Custom(format!(
+                "Coin {} already spent",
+                hex::encode(coin_record.coin.coin_id())
+            )));
+        }
         println!(
             "Parsing parent spend for coin 0x{}...",
             hex::encode(coin_record.coin.coin_id())
@@ -163,11 +171,15 @@ pub async fn cli_revoke(
     for (i, cat) in cats.into_iter().enumerate() {
         let delegated_puzzle = if i == 0 {
             let user_hint = ctx.hint(user_ph)?;
-            ctx.alloc(&clvm_quote!(Conditions::new().create_coin(
-                user_ph,
-                total_cat_amount,
-                user_hint
-            )))?
+            ctx.alloc(&clvm_quote!(
+                Conditions::new().create_coin(
+                    RevocationArgs::new(hidden_puzzle_hash, user_ph)
+                        .curry_tree_hash()
+                        .into(),
+                    total_cat_amount,
+                    user_hint
+                )
+            ))?
         } else {
             NodePtr::NIL
         };
