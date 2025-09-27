@@ -16,10 +16,6 @@ chia-puzzles = "0.20.1"
 hex = "0.4.3"
 hex-literal = "0.4.1"
 clap = { version = "4", features = ["derive"] }
-thiserror = "2.0.12"
 tokio = { version = "1.44.1", features = ["full"] }
-bech32 = "0.9.1"
-dirs = "6.0.0"
 chia-wallet-sdk = { git = "https://github.com/xch-dev/chia-wallet-sdk.git", rev="1199e568df1d8a77a824e166d674a1e913bef211", features=["offer-compression", "action-layer"] }
-sage-api = { version = "0.12.3", git = "https://github.com/xch-dev/sage.git" }
 slot-machine = { git = "https://github.com/Yakuhito/slot-machine"}

@@ -3470,7 +3470,6 @@ dependencies = [
 name = "rcli"
 version = "0.1.0"
 dependencies = [
- "bech32",
  "chia",
  "chia-puzzle-types",
  "chia-puzzles",
@@ -3478,12 +3477,9 @@ dependencies = [
  "clap",
  "clvm-traits",
  "clvmr",
- "dirs",
  "hex",
  "hex-literal",
- "sage-api",
  "slot-machine",
- "thiserror 2.0.16",
  "tokio",
 ]
 
