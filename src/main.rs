@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use rcli::{cli_issue, cli_launch_vault, cli_ping};
+use rcli::{cli_issue, cli_launch_vault, cli_ping, cli_revoke};
 
 #[derive(Parser)]
 #[command(
@@ -28,7 +28,7 @@ enum Commands {
         testnet11: bool,
     },
 
-    /// Issue more of the vault rCAT
+    /// Issue the vault's rCAT
     Issue {
         /// The vault launcher id
         #[arg(long)]
@@ -39,7 +39,26 @@ enum Commands {
         cat_amount: String,
 
         /// Transaction fee
-        #[arg(long, default_value = "0.00042")]
+        #[arg(long, default_value = "0")]
+        fee: String,
+
+        /// Use testnet11
+        #[arg(long, default_value = "false")]
+        testnet11: bool,
+    },
+
+    /// Revoke the vault's rCAT
+    Revoke {
+        /// The vault launcher id
+        #[arg(long)]
+        launcher_id: String,
+
+        /// Comma-separated list of rCAT coin ids to revoke
+        #[arg(long)]
+        coin_ids: String,
+
+        /// Transaction fee
+        #[arg(long, default_value = "0")]
         fee: String,
 
         /// Use testnet11
@@ -61,6 +80,12 @@ async fn main() {
             fee,
             testnet11,
         } => cli_issue(launcher_id, cat_amount, fee, testnet11).await,
+        Commands::Revoke {
+            launcher_id,
+            coin_ids,
+            fee,
+            testnet11,
+        } => cli_revoke(launcher_id, coin_ids, fee, testnet11).await,
     };
 
     if let Err(err) = res {
