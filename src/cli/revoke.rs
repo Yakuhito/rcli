@@ -1,5 +1,5 @@
 use chia::protocol::{Bytes, Bytes32, Coin, SpendBundle};
-use chia_puzzle_types::{Memos, cat::CatArgs, singleton::SingletonStruct};
+use chia_puzzle_types::{LineageProof, Memos, cat::CatArgs, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     coinset::ChiaRpcClient,
     driver::{
@@ -61,11 +61,39 @@ pub async fn cli_revoke(
         P2DelegatedBySingletonLayerArgs::curry_tree_hash(singleton_struct_hash, 0).into();
     println!("Hidden puzzle hash: {:}", hex::encode(hidden_puzzle_hash));
 
-    for coin_id in coin_ids {
+    println!("Fetching rCAT coin records...");
+    let coin_ids_len = coin_ids.len();
+    let Some(coin_records) = client
+        .get_coin_records_by_names(coin_ids, None, None, Some(true))
+        .await?
+        .coin_records
+    else {
+        return Err(CliError::Custom("Error fetching coin records".to_string()));
+    };
+    if coin_records.len() != coin_ids_len {
+        return Err(CliError::Custom(
+            "Could not find one or more rCAT coins on-chain".to_string(),
+        ));
+    }
+
+    let lineage_proofs: Vec<LineageProof> = Vec::with_capacity(coin_ids_len);
+    for coin_record in coin_records {
         println!(
-            "Fetching lineage proof for coin 0x{:}...",
-            hex::encode(coin_id)
+            "Fetching lineage proof for coin 0x{}...",
+            hex::encode(coin_record.coin.coin_id())
         );
+        let Some(parent_spend) = client
+            .get_puzzle_and_solution(
+                coin_record.coin.coin_id(),
+                Some(coin_record.confirmed_block_index),
+            )
+            .await?
+            .coin_solution
+        else {
+            return Err(CliError::CoinNotSpent(coin_record.coin.coin_id()));
+        };
+
+        // todo: convert parent spend to lp
     }
 
     // let wallet = SageClient::new()?;
