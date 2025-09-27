@@ -31,3 +31,11 @@ Your vault may issue the rCATs at any point. Currently, the CLI uses a hardcoded
 ```bash
 rcli issue --launcher-id 05950b3fde7d80a8d7c9af7e2c59a7812a39ddd7a1589d2b11b7aa7a1041bf3a --amount 420.0 --fee 0.0042 --testnet11
 ```
+
+### Revoke rCATs
+
+You can revoke any rCAT issued by your vault using the following command:
+
+```bash
+rcli revoke --launcher-id 05950b3fde7d80a8d7c9af7e2c59a7812a39ddd7a1589d2b11b7aa7a1041bf3a --coin-ids [coin-ids] --fee 0.0042 --testnet11
+```

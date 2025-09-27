@@ -50,7 +50,7 @@ pub async fn cli_issue(
     let tail_args = EverythingWithSingletonTailArgs::new(launcher_id, 0);
     let tail_ptr = ctx.curry(tail_args)?;
     let asset_id: Bytes32 = tail_args.curry_tree_hash().into();
-    println!("CAT asset id: {:}", hex::encode(asset_id));
+    println!("rCAT asset id: {:}", hex::encode(asset_id));
 
     let singleton_struct_hash: Bytes32 = SingletonStruct::new(launcher_id).tree_hash().into();
     // let hidden_puzzle = P2DelegatedBySingletonLayer::new(singleton_struct_hash, 0);
