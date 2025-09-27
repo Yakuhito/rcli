@@ -3,8 +3,8 @@ use chia_puzzle_types::{Memos, cat::CatArgs, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     coinset::ChiaRpcClient,
     driver::{
-        Cat, CatInfo, CatSpend, Layer, Offer, SingletonInfo, Spend, SpendContext,
-        create_security_coin, decode_offer, spend_security_coin,
+        Cat, CatInfo, CatSpend, Offer, SingletonInfo, Spend, SpendContext, create_security_coin,
+        decode_offer, spend_security_coin,
     },
     prelude::ToTreeHash,
     test::print_spend_bundle_to_file,
@@ -15,7 +15,7 @@ use chia_wallet_sdk::{
     utils::Address,
 };
 use clvm_traits::clvm_quote;
-use clvmr::{NodePtr, serde::node_to_bytes};
+use clvmr::NodePtr;
 use slot_machine::{
     CliError, MultisigSingleton, SageClient, assets_xch_only, get_coinset_client, get_constants,
     get_prefix, hex_string_to_bytes32, hex_string_to_signature, no_assets, parse_amount,
@@ -47,9 +47,9 @@ pub async fn cli_issue_cat(
 
     println!("Latest vault coin: {:}", hex::encode(vault.coin.coin_id()));
 
-    let tail = EverythingWithSingletonTailArgs::new(launcher_id, 0);
-    let tail_ptr = tail.construct_puzzle(&mut ctx)?;
-    let asset_id: Bytes32 = tail.curry_tree_hash().into();
+    let tail_args = EverythingWithSingletonTailArgs::new(launcher_id, 0);
+    let tail_ptr = ctx.curry(tail_args)?;
+    let asset_id: Bytes32 = tail_args.curry_tree_hash().into();
     println!("CAT asset id: {:}", hex::encode(asset_id));
 
     let singleton_struct_hash: Bytes32 = SingletonStruct::new(launcher_id).tree_hash().into();
@@ -137,15 +137,11 @@ pub async fn cli_issue_cat(
 
     // Spend vault - which needs to send a message to the eve CAT
     //  to approve issuance
-    let message_ptr = ctx.alloc(&cat_amount)?;
+    // Note: When issuing, message = delta = 0
     let receiver_coin_id = ctx.alloc(&eve_cat_coin.coin_id())?;
     let vault_hint = ctx.hint(launcher_id)?;
     let conditions = Conditions::new()
-        .send_message(
-            23,
-            Bytes::from(node_to_bytes(&ctx, message_ptr)?),
-            vec![receiver_coin_id],
-        )
+        .send_message(23, Bytes::new(vec![]), vec![receiver_coin_id])
         .create_coin(
             vault.info.inner_puzzle_hash().into(),
             vault.coin.amount,
