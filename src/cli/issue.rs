@@ -7,7 +7,6 @@ use chia_wallet_sdk::{
         decode_offer, spend_security_coin,
     },
     prelude::ToTreeHash,
-    test::print_spend_bundle_to_file,
     types::{
         Conditions, Mod,
         puzzles::{P2DelegatedBySingletonLayerArgs, RevocationArgs},
@@ -169,12 +168,6 @@ pub async fn cli_issue(
     let sb = offer.take(SpendBundle::new(spends, security_coin_sig + &vault_sig));
 
     println!("Submitting transaction...");
-    print_spend_bundle_to_file(
-        sb.coin_spends.clone(),
-        sb.aggregated_signature.clone(),
-        "sb.debug",
-    );
-
     let resp = client.push_tx(sb).await?;
 
     println!("Transaction submitted; status='{}'", resp.status);
