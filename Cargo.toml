@@ -8,7 +8,13 @@ homepage = "https://github.com/Yakuhito/rcli"
 repository = "https://github.com/Yakuhito/rcli"
 
 [dependencies]
+clvmr = "0.14.0"
+chia = "0.26.0"
+clvm-traits = "0.26.0"
+chia-puzzle-types = "0.26.0"
+chia-puzzles = "0.20.1"
 hex = "0.4.3"
+hex-literal = "0.4.1"
 clap = { version = "4", features = ["derive"] }
 thiserror = "2.0.12"
 tokio = { version = "1.44.1", features = ["full"] }

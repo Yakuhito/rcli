@@ -3471,10 +3471,16 @@ name = "rcli"
 version = "0.1.0"
 dependencies = [
  "bech32",
+ "chia",
+ "chia-puzzle-types",
+ "chia-puzzles",
  "chia-wallet-sdk 0.27.2",
  "clap",
+ "clvm-traits",
+ "clvmr",
  "dirs",
  "hex",
+ "hex-literal",
  "sage-api",
  "slot-machine",
  "thiserror 2.0.16",
