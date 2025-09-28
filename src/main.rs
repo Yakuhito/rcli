@@ -39,7 +39,7 @@ enum Commands {
         cat_amount: String,
 
         /// Transaction fee
-        #[arg(long, default_value = "0")]
+        #[arg(long, default_value = "0.0")]
         fee: String,
 
         /// Use testnet11
@@ -58,7 +58,7 @@ enum Commands {
         coin_ids: String,
 
         /// Transaction fee
-        #[arg(long, default_value = "0")]
+        #[arg(long, default_value = "0.0")]
         fee: String,
 
         /// Use testnet11
@@ -89,7 +89,7 @@ enum Commands {
         exclude_addresses: String,
 
         /// Transaction fee
-        #[arg(long, default_value = "0")]
+        #[arg(long, default_value = "0.0")]
         fee: String,
 
         /// Use testnet11
