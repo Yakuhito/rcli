@@ -45,5 +45,12 @@ rcli revoke --launcher-id [launcher-id] --coin-ids [coin-ids] --fee 0.00042 --te
 You can revoke rCATs of top holders by using the following command:
 
 ```bash
-rcli revoke-bulk --launcher-id [launcher-id] --min-coins 16 --max-coins 128 --min-coin-amount 1.00 --fee 0.0042 --testnet11
+rcli revoke-bulk \
+    --launcher-id [launcher-id] \
+    --min-coins 16 \
+    --max-coins 128 \
+    --min-coin-amount 1.00 \
+    --fee 0.0042 \
+    --exclude-addresses [your address + TibetSwap address] \
+    --testnet11
 ```

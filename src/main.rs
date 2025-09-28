@@ -84,6 +84,10 @@ enum Commands {
         #[arg(long, default_value = "1.00")]
         min_coin_amount: String,
 
+        /// Comma-separated list of addresses to NOT revoke from
+        #[arg(long)]
+        exclude_addresses: String,
+
         /// Transaction fee
         #[arg(long, default_value = "0")]
         fee: String,
@@ -115,11 +119,24 @@ async fn main() {
         } => cli_revoke(launcher_id, coin_ids, fee, testnet11).await,
         Commands::RevokeBulk {
             launcher_id,
+            min_coins,
             max_coins,
             min_coin_amount,
+            exclude_addresses,
             fee,
             testnet11,
-        } => cli_revoke_bulk(launcher_id, max_coins, min_coin_amount, fee, testnet11).await,
+        } => {
+            cli_revoke_bulk(
+                launcher_id,
+                min_coins,
+                max_coins,
+                min_coin_amount,
+                exclude_addresses,
+                fee,
+                testnet11,
+            )
+            .await
+        }
     };
 
     if let Err(err) = res {
