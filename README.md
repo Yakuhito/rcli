@@ -29,7 +29,7 @@ Save the launcher id somewhere safe - this is public information, so no need to 
 Your vault may issue the rCATs at any point. Currently, the CLI uses a hardcoded nonce of 0 - this means that your vault will always isse the same rCAT (same asset id and same hidden puzzle hash).
 
 ```bash
-rcli issue --launcher-id [launcher-id] --amount 420.0 --fee 0.0042 --testnet11
+rcli issue --launcher-id [launcher-id] --cat-amount 420.0 --fee 0.0042 --testnet11
 ```
 
 ### Revoke rCATs

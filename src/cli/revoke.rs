@@ -7,6 +7,7 @@ use chia_wallet_sdk::{
         SpendContext, create_security_coin, decode_offer, spend_security_coin,
     },
     prelude::ToTreeHash,
+    test::print_spend_bundle_to_file,
     types::{
         Conditions, Mod,
         puzzles::{
@@ -16,7 +17,7 @@ use chia_wallet_sdk::{
     utils::Address,
 };
 use clvm_traits::clvm_quote;
-use clvmr::NodePtr;
+use clvmr::{NodePtr, serde::node_to_bytes};
 use slot_machine::{
     CliError, MultisigSingleton, SageClient, assets_xch_only, get_coinset_client, get_constants,
     get_prefix, hex_string_to_bytes32, hex_string_to_signature, no_assets, parse_amount,
@@ -95,7 +96,7 @@ pub async fn cli_revoke(
             .await?
             .coin_solution
         else {
-            return Err(CliError::CoinNotSpent(coin_record.coin.coin_id()));
+            return Err(CliError::CoinNotSpent(coin_record.coin.parent_coin_info));
         };
 
         let parent_puzzle = ctx.alloc(&parent_spend.puzzle_reveal)?;
@@ -109,6 +110,7 @@ pub async fn cli_revoke(
             ));
         };
 
+        println!("children len: {}", children.len()); // todo: debug
         let cat_coin_id = coin_record.coin.coin_id();
         let cat = children
             .into_iter()
@@ -135,7 +137,7 @@ pub async fn cli_revoke(
 
     let wallet = SageClient::new()?;
     let offer_resp = wallet
-        .make_offer(no_assets(), assets_xch_only(1), fee, None, None, true)
+        .make_offer(no_assets(), assets_xch_only(1), fee, None, None, false)
         .await?;
     println!("Offer with id {} created.", offer_resp.offer_id);
 
@@ -170,16 +172,15 @@ pub async fn cli_revoke(
     let mut vault_conditions = Conditions::new();
     for (i, cat) in cats.into_iter().enumerate() {
         let delegated_puzzle = if i == 0 {
+            let target_puzzle_hash = RevocationArgs::new(hidden_puzzle_hash, user_ph)
+                .curry_tree_hash()
+                .into();
             let user_hint = ctx.hint(user_ph)?;
-            ctx.alloc(&clvm_quote!(
-                Conditions::new().create_coin(
-                    RevocationArgs::new(hidden_puzzle_hash, user_ph)
-                        .curry_tree_hash()
-                        .into(),
-                    total_cat_amount,
-                    user_hint
-                )
-            ))?
+            ctx.alloc(&clvm_quote!(Conditions::new().create_coin(
+                target_puzzle_hash,
+                total_cat_amount,
+                user_hint
+            )))?
         } else {
             NodePtr::NIL
         };
@@ -199,6 +200,14 @@ pub async fn cli_revoke(
                 delegated_solution: NodePtr::NIL,
             },
         )?;
+        println!(
+            "Inner puzzle: {:}",
+            hex::encode(node_to_bytes(&ctx, inner_spend.puzzle)?)
+        ); // todo: debug
+        println!(
+            "Inner solution: {:}",
+            hex::encode(node_to_bytes(&ctx, inner_spend.solution)?)
+        ); // todo: debug
         cat_spends.push(CatSpend::revoke(cat, inner_spend));
     }
 
@@ -233,6 +242,11 @@ pub async fn cli_revoke(
     let sb = offer.take(SpendBundle::new(spends, security_coin_sig + &vault_sig));
 
     println!("Submitting transaction...");
+    print_spend_bundle_to_file(
+        sb.coin_spends.clone(),
+        sb.aggregated_signature.clone(),
+        "sb.debug",
+    );
     let resp = client.push_tx(sb).await?;
 
     println!("Transaction submitted; status='{}'", resp.status);
