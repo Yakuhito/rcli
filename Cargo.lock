@@ -3467,6 +3467,10 @@ dependencies = [
  "clvmr",
  "hex",
  "hex-literal",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
  "slot-machine",
  "tokio",
 ]

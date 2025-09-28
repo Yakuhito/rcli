@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use rcli::{cli_issue, cli_launch_vault, cli_ping, cli_revoke};
+use rcli::{cli_issue, cli_launch_vault, cli_ping, cli_revoke, cli_revoke_bulk};
 
 #[derive(Parser)]
 #[command(
@@ -65,6 +65,33 @@ enum Commands {
         #[arg(long, default_value = "false")]
         testnet11: bool,
     },
+
+    /// Revoke a bulk of rCATs
+    RevokeBulk {
+        /// The vault launcher id
+        #[arg(long)]
+        launcher_id: String,
+
+        /// Minimum total number of coins to revoke
+        #[arg(long, default_value = "16")]
+        min_coins: usize,
+
+        /// Maximum total number of coins to revoke
+        #[arg(long, default_value = "128")]
+        max_coins: usize,
+
+        /// Minimum coin amount to revoke
+        #[arg(long, default_value = "1.00")]
+        min_coin_amount: String,
+
+        /// Transaction fee
+        #[arg(long, default_value = "0")]
+        fee: String,
+
+        /// Use testnet11
+        #[arg(long, default_value = "false")]
+        testnet11: bool,
+    },
 }
 
 #[tokio::main]
@@ -86,6 +113,13 @@ async fn main() {
             fee,
             testnet11,
         } => cli_revoke(launcher_id, coin_ids, fee, testnet11).await,
+        Commands::RevokeBulk {
+            launcher_id,
+            max_coins,
+            min_coin_amount,
+            fee,
+            testnet11,
+        } => cli_revoke_bulk(launcher_id, max_coins, min_coin_amount, fee, testnet11).await,
     };
 
     if let Err(err) = res {

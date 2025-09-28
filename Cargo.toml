@@ -17,5 +17,9 @@ hex = "0.4.3"
 hex-literal = "0.4.1"
 clap = { version = "4", features = ["derive"] }
 tokio = { version = "1.44.1", features = ["full"] }
+reqwest = { version = "0.12.20", features = ["json", "rustls-tls"] }
+rustls = { version = "0.23", features = ["ring","logging","tls12"], default-features = false }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 chia-wallet-sdk = { git = "https://github.com/xch-dev/chia-wallet-sdk.git", rev="010a5e932b6eeb2fc318d2d79492965bf4e26ef2", features=["offer-compression", "action-layer"] }
 slot-machine = { git = "https://github.com/Yakuhito/slot-machine", rev="7d57e9653adce1cbba959a3d793793828a7770c5"}
