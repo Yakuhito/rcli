@@ -39,7 +39,7 @@ pub async fn cli_revoke_bulk(
     let holders = spacescan_client
         .get_token_holders(asset_id, max_coins)
         .await?;
-    println!("Got {} holders.", holders.count);
+    println!("Got {} holders.", holders.tokens.len());
 
     println!("Fetching rCAT coin records...");
     let mut puzzle_hashes: Vec<Bytes32> = Vec::new();
