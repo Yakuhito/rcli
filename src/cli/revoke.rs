@@ -10,6 +10,7 @@ use crate::{EverythingWithSingletonTailArgs, revoke_coins};
 
 pub async fn cli_revoke(
     launcher_id_str: String,
+    percentage: u8,
     coin_ids_str: String,
     fee_str: String,
     testnet11: bool,
@@ -50,6 +51,7 @@ pub async fn cli_revoke(
     revoke_coins(
         launcher_id,
         testnet11,
+        percentage,
         fee,
         asset_id,
         hidden_puzzle_hash,

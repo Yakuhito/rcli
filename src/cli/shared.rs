@@ -3,7 +3,7 @@ use chia_puzzle_types::singleton::SingletonStruct;
 use chia_wallet_sdk::{
     coinset::{ChiaRpcClient, CoinRecord, CoinsetClient},
     driver::{
-        Cat, CatSpend, Layer, Offer, P2DelegatedBySingletonLayer, Puzzle, SingletonInfo,
+        Asset, Cat, CatSpend, Layer, Offer, P2DelegatedBySingletonLayer, Puzzle, SingletonInfo,
         SpendContext, StandardLayer, create_security_coin, decode_offer, spend_security_coin,
     },
     prelude::ToTreeHash,
@@ -36,9 +36,11 @@ pub async fn get_first_address(wallet: &SageClient) -> Result<StandardLayer, Cli
     Ok(layer)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn revoke_coins(
     launcher_id: Bytes32,
     testnet11: bool,
+    percentage: u8,
     fee: u64,
     asset_id: Bytes32,
     hidden_puzzle_hash: Bytes32,
@@ -58,6 +60,8 @@ pub async fn revoke_coins(
     println!("Latest vault coin: {:}", hex::encode(vault.coin.coin_id()));
 
     let mut total_cat_amount = 0;
+    let mut total_revoked_amount = 0;
+    let mut amount_to_revoke: Vec<u64> = Vec::with_capacity(coin_records.len());
     let mut cats: Vec<Cat> = Vec::with_capacity(coin_records.len());
     for coin_record in coin_records {
         if coin_record.spent {
@@ -108,12 +112,19 @@ pub async fn revoke_coins(
 
         cats.push(cat);
         total_cat_amount += cat.coin.amount;
+
+        let amount_to_keep = cat.coin.amount * percentage as u64 / 100;
+        let to_revoke = cat.coin.amount - amount_to_keep;
+
+        amount_to_revoke.push(to_revoke);
+        total_revoked_amount += to_revoke;
     }
 
     println!(
-        "Revoking {} rCATs (total amount {:.3})...",
+        "Revoking {} rCATs (total amount {:.3}; total revoked amount {:.3})...",
         cats.len(),
-        total_cat_amount as f64 / 1000.0
+        total_cat_amount as f64 / 1000.0,
+        total_revoked_amount as f64 / 1000.0
     );
 
     let wallet = SageClient::new()?;
@@ -152,18 +163,32 @@ pub async fn revoke_coins(
     let mut cat_spends: Vec<CatSpend> = Vec::with_capacity(cats.len());
     let mut vault_conditions = Conditions::new();
     for (i, cat) in cats.into_iter().enumerate() {
+        let owner_refund_ph = RevocationArgs::new(hidden_puzzle_hash, cat.p2_puzzle_hash())
+            .curry_tree_hash()
+            .into();
+        let owner_refund_hint = ctx.hint(owner_refund_ph)?;
+
         let delegated_puzzle = if i == 0 {
             let target_puzzle_hash = RevocationArgs::new(hidden_puzzle_hash, user_ph)
                 .curry_tree_hash()
                 .into();
             let user_hint = ctx.hint(user_ph)?;
-            ctx.alloc(&clvm_quote!(Conditions::new().create_coin(
-                target_puzzle_hash,
-                total_cat_amount,
-                user_hint
-            )))?
+
+            ctx.alloc(&clvm_quote!(
+                Conditions::new()
+                    .create_coin(target_puzzle_hash, total_cat_amount, user_hint)
+                    .create_coin(
+                        owner_refund_ph,
+                        cat.coin.amount - amount_to_revoke[i],
+                        owner_refund_hint
+                    )
+            ))?
         } else {
-            NodePtr::NIL
+            ctx.alloc(&clvm_quote!(Conditions::new().create_coin(
+                owner_refund_ph,
+                cat.coin.amount - amount_to_revoke[i],
+                owner_refund_hint,
+            )))?
         };
 
         let delegated_puzzle_hash: Bytes32 = ctx.tree_hash(delegated_puzzle).into();

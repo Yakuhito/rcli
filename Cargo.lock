@@ -3465,6 +3465,7 @@ dependencies = [
  "clap",
  "clvm-traits",
  "clvmr",
+ "csv",
  "hex",
  "hex-literal",
  "reqwest",

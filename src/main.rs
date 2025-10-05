@@ -53,6 +53,10 @@ enum Commands {
         #[arg(long)]
         launcher_id: String,
 
+        /// Percentage of original amount that rCAT holders get to keep (rounded down for them)
+        #[arg(long, default_value = "50")]
+        percentage: u8,
+
         /// Comma-separated list of rCAT coin ids to revoke
         #[arg(long)]
         coin_ids: String,
@@ -72,16 +76,24 @@ enum Commands {
         #[arg(long)]
         launcher_id: String,
 
+        /// CSV file containing holders
+        #[arg(long)]
+        csv: String,
+
+        /// Percentage of original amount that rCAT holders get to keep (rounded down for them)
+        #[arg(long, default_value = "50")]
+        percentage: u8,
+
         /// Minimum total number of coins to revoke
         #[arg(long, default_value = "16")]
         min_coins: usize,
 
         /// Maximum total number of coins to revoke
-        #[arg(long, default_value = "128")]
+        #[arg(long, default_value = "100")]
         max_coins: usize,
 
         /// Minimum coin amount to revoke
-        #[arg(long, default_value = "1.00")]
+        #[arg(long, default_value = "0.001")]
         min_coin_amount: String,
 
         /// Comma-separated list of addresses to NOT revoke from
@@ -113,12 +125,15 @@ async fn main() {
         } => cli_issue(launcher_id, cat_amount, fee, testnet11).await,
         Commands::Revoke {
             launcher_id,
+            percentage,
             coin_ids,
             fee,
             testnet11,
-        } => cli_revoke(launcher_id, coin_ids, fee, testnet11).await,
+        } => cli_revoke(launcher_id, percentage, coin_ids, fee, testnet11).await,
         Commands::RevokeBulk {
             launcher_id,
+            csv,
+            percentage,
             min_coins,
             max_coins,
             min_coin_amount,
@@ -128,6 +143,8 @@ async fn main() {
         } => {
             cli_revoke_bulk(
                 launcher_id,
+                csv,
+                percentage,
                 min_coins,
                 max_coins,
                 min_coin_amount,
