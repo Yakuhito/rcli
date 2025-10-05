@@ -168,27 +168,29 @@ pub async fn revoke_coins(
             .into();
         let owner_refund_hint = ctx.hint(owner_refund_ph)?;
 
+        let base_condition = if amount_to_revoke[i] == cat.coin.amount {
+            Conditions::new()
+        } else {
+            Conditions::new().create_coin(
+                owner_refund_ph,
+                cat.coin.amount - amount_to_revoke[i],
+                owner_refund_hint,
+            )
+        };
+
         let delegated_puzzle = if i == 0 {
             let target_puzzle_hash = RevocationArgs::new(hidden_puzzle_hash, user_ph)
                 .curry_tree_hash()
                 .into();
             let user_hint = ctx.hint(user_ph)?;
 
-            ctx.alloc(&clvm_quote!(
-                Conditions::new()
-                    .create_coin(target_puzzle_hash, total_revoked_amount, user_hint)
-                    .create_coin(
-                        owner_refund_ph,
-                        cat.coin.amount - amount_to_revoke[i],
-                        owner_refund_hint
-                    )
-            ))?
-        } else {
-            ctx.alloc(&clvm_quote!(Conditions::new().create_coin(
-                owner_refund_ph,
-                cat.coin.amount - amount_to_revoke[i],
-                owner_refund_hint,
+            ctx.alloc(&clvm_quote!(base_condition.create_coin(
+                target_puzzle_hash,
+                total_revoked_amount,
+                user_hint
             )))?
+        } else {
+            ctx.alloc(&clvm_quote!(base_condition))?
         };
 
         let delegated_puzzle_hash: Bytes32 = ctx.tree_hash(delegated_puzzle).into();
