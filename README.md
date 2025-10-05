@@ -47,6 +47,7 @@ You can revoke rCATs of top holders by using the following command:
 ```bash
 rcli revoke-bulk \
     --launcher-id [launcher-id] \
+    --csv [csv filename] \
     --min-coins 16 \
     --max-coins 128 \
     --min-coin-amount 1.00 \

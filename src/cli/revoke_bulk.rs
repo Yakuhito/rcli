@@ -112,7 +112,7 @@ pub struct HolderCoinRecord {
     pub coin_name: Bytes32,
     #[serde(deserialize_with = "serde_hex_string_to_bytes32")]
     pub puzzle_hash: Bytes32,
-    pub amount: u8,
+    pub amount: u64,
 }
 
 pub fn load_holders_csv<P: AsRef<Path>>(path: P) -> Result<Vec<HolderCoinRecord>, CliError> {

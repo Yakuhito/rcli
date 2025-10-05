@@ -176,7 +176,7 @@ pub async fn revoke_coins(
 
             ctx.alloc(&clvm_quote!(
                 Conditions::new()
-                    .create_coin(target_puzzle_hash, total_cat_amount, user_hint)
+                    .create_coin(target_puzzle_hash, total_revoked_amount, user_hint)
                     .create_coin(
                         owner_refund_ph,
                         cat.coin.amount - amount_to_revoke[i],
