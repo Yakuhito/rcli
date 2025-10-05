@@ -59,17 +59,31 @@ pub async fn cli_revoke_bulk(
         coin_names.push(holder.coin_name);
     }
 
-    let Some(mut coin_records) = client
-        .get_coin_records_by_names(coin_names, None, None, Some(false))
-        .await?
-        .coin_records
-    else {
-        return Err(CliError::Custom("No coin records found".to_string()));
-    };
+    // Temp fix until coinset fixes their stuff
+    // let Some(mut coin_records) = client
+    //     .get_coin_records_by_names(coin_names, None, None, Some(false))
+    //     .await?
+    //     .coin_records
+    // else {
+    //     return Err(CliError::Custom("No coin records found".to_string()));
+    // };
+    let mut coin_records = Vec::new();
+    for coin_name in coin_names {
+        let Some(record) = client.get_coin_record_by_name(coin_name).await?.coin_record else {
+            continue;
+        };
+
+        if record.spent {
+            continue;
+        }
+
+        coin_records.push(record);
+    }
+    // end temp fix
 
     coin_records = coin_records
         .into_iter()
-        .filter(|cr| cr.coin.amount >= min_coin_amount)
+        .filter(|cr| !cr.spent && cr.coin.amount >= min_coin_amount)
         .collect::<Vec<_>>();
     coin_records.sort_unstable_by(|a, b| b.coin.amount.cmp(&a.coin.amount));
 

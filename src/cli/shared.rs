@@ -166,7 +166,7 @@ pub async fn revoke_coins(
         let owner_refund_ph = RevocationArgs::new(hidden_puzzle_hash, cat.p2_puzzle_hash())
             .curry_tree_hash()
             .into();
-        let owner_refund_hint = ctx.hint(owner_refund_ph)?;
+        let owner_refund_hint = ctx.hint(cat.p2_puzzle_hash())?;
 
         let base_condition = if amount_to_revoke[i] == cat.coin.amount {
             Conditions::new()
