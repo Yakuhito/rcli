@@ -1,5 +1,8 @@
 use clap::{Parser, Subcommand};
-use rcli::{cli_issue, cli_launch_vault, cli_ping, cli_revoke, cli_revoke_bulk};
+use rcli::{
+    cli_generate_send_message_bundle, cli_issue, cli_launch_vault, cli_ping, cli_revoke,
+    cli_revoke_bulk,
+};
 
 #[derive(Parser)]
 #[command(
@@ -122,10 +125,6 @@ enum Commands {
         #[arg(long)]
         receiver_puzzle_hash: String,
 
-        /// p2_vault coin parent id
-        #[arg(long)]
-        p2_vault_coin_parent_id: String,
-
         /// Use testnet11
         #[arg(long, default_value = "false")]
         testnet11: bool,
@@ -180,17 +179,10 @@ async fn main() {
             launcher_id,
             message,
             receiver_puzzle_hash,
-            p2_vault_coin_parent_id,
             testnet11,
         } => {
-            cli_generate_send_message_bundle(
-                launcher_id,
-                message,
-                receiver_puzzle_hash,
-                p2_vault_coin_parent_id,
-                testnet11,
-            )
-            .await
+            cli_generate_send_message_bundle(launcher_id, message, receiver_puzzle_hash, testnet11)
+                .await
         }
     };
 
