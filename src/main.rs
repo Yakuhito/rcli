@@ -108,6 +108,28 @@ enum Commands {
         #[arg(long, default_value = "false")]
         testnet11: bool,
     },
+    /// (UNSAFE - only use if you know what you're doing) Generate a partial signed bundle that has a vault p2 coin sending a puzzle-puzzle numeric message to a coin
+    GenerateSendMessageBundle {
+        /// The vault launcher id
+        #[arg(long)]
+        launcher_id: String,
+
+        /// Message
+        #[arg(long)]
+        message: u64,
+
+        /// Recevier coin puzzle hash
+        #[arg(long)]
+        receiver_puzzle_hash: String,
+
+        /// p2_vault coin parent id
+        #[arg(long)]
+        p2_vault_coin_parent_id: String,
+
+        /// Use testnet11
+        #[arg(long, default_value = "false")]
+        testnet11: bool,
+    },
 }
 
 #[tokio::main]
@@ -150,6 +172,22 @@ async fn main() {
                 min_coin_amount,
                 exclude_addresses,
                 fee,
+                testnet11,
+            )
+            .await
+        }
+        Commands::GenerateSendMessageBundle {
+            launcher_id,
+            message,
+            receiver_puzzle_hash,
+            p2_vault_coin_parent_id,
+            testnet11,
+        } => {
+            cli_generate_send_message_bundle(
+                launcher_id,
+                message,
+                receiver_puzzle_hash,
+                p2_vault_coin_parent_id,
                 testnet11,
             )
             .await
