@@ -1,4 +1,7 @@
-use chia::protocol::{Bytes32, Coin};
+use chia::{
+    protocol::{Bytes32, Coin},
+    traits::Streamable,
+};
 use chia_puzzle_types::{Memos, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     driver::{Layer, P2DelegatedBySingletonLayer, SingletonInfo, SpendContext},
@@ -10,7 +13,7 @@ use chia_wallet_sdk::{
     },
 };
 use clvm_traits::clvm_quote;
-use clvmr::{NodePtr, serde::node_to_bytes};
+use clvmr::NodePtr;
 use slot_machine::{
     CliError, MultisigSingleton, SageClient, get_coinset_client, get_constants,
     hex_string_to_bytes32, hex_string_to_signature, sync_multisig_singleton,
@@ -54,12 +57,10 @@ pub async fn cli_generate_send_message_bundle(
         0,
     );
 
-    let p2_message = ctx.alloc(&message)?;
-    let p2_message = node_to_bytes(&ctx, p2_message)?;
     let receiver_puzzle_hash_ptr = ctx.alloc(&receiver_puzzle_hash)?;
     let p2_delegated_puzzle = ctx.alloc(&clvm_quote!(Conditions::new().send_message(
         18,
-        p2_message.into(),
+        message.to_bytes().unwrap().into(),
         vec![receiver_puzzle_hash_ptr]
     )))?;
 
