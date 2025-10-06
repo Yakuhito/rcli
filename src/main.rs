@@ -183,10 +183,17 @@ async fn main() {
             launcher_id,
             message,
             receiver_puzzle_hash,
+            output_file,
             testnet11,
         } => {
-            cli_generate_send_message_bundle(launcher_id, message, receiver_puzzle_hash, testnet11)
-                .await
+            cli_generate_send_message_bundle(
+                launcher_id,
+                message,
+                receiver_puzzle_hash,
+                output_file,
+                testnet11,
+            )
+            .await
         }
     };
 

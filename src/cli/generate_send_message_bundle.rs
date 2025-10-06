@@ -3,7 +3,7 @@ use chia_puzzle_types::{Memos, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     driver::{Layer, P2DelegatedBySingletonLayer, SingletonInfo, SpendContext},
     prelude::ToTreeHash,
-    test::print_spend_bundle,
+    test::print_spend_bundle_to_file,
     types::{
         Conditions, Mod,
         puzzles::{P2DelegatedBySingletonLayerArgs, P2DelegatedBySingletonLayerSolution},
@@ -22,6 +22,7 @@ pub async fn cli_generate_send_message_bundle(
     launcher_id_str: String,
     message: u64,
     receiver_puzzle_hash_str: String,
+    output_file: String,
     testnet11: bool,
 ) -> Result<(), CliError> {
     let launcher_id = hex_string_to_bytes32(&launcher_id_str)?;
@@ -35,6 +36,8 @@ pub async fn cli_generate_send_message_bundle(
     else {
         return Err(CliError::Custom("Could not sync vault".to_string()));
     };
+
+    println!("Latest vault coin: {:}", hex::encode(vault.coin.coin_id()));
 
     // Get wallet
     let wallet = SageClient::new()?;
@@ -105,7 +108,8 @@ pub async fn cli_generate_send_message_bundle(
     )?;
 
     // Print final bundle
-    print_spend_bundle(spends, vault_sig);
+    print_spend_bundle_to_file(spends, vault_sig, &output_file);
+    println!("Spend bundle saved to '{}'", output_file);
 
     Ok(())
 }
