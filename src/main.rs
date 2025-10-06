@@ -125,6 +125,10 @@ enum Commands {
         #[arg(long)]
         receiver_puzzle_hash: String,
 
+        /// Spend bundle output file
+        #[arg(long, default_value = "spend_bundle.json")]
+        output_file: String,
+
         /// Use testnet11
         #[arg(long, default_value = "false")]
         testnet11: bool,
