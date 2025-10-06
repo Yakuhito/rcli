@@ -1,7 +1,4 @@
-use chia::{
-    protocol::{Bytes32, Coin},
-    traits::Streamable,
-};
+use chia::protocol::{Bytes, Bytes32, Coin};
 use chia_puzzle_types::{Memos, singleton::SingletonStruct};
 use chia_wallet_sdk::{
     driver::{Layer, P2DelegatedBySingletonLayer, SingletonInfo, SpendContext},
@@ -57,10 +54,12 @@ pub async fn cli_generate_send_message_bundle(
         0,
     );
 
+    let message = ctx.alloc(&message)?;
+    let message = ctx.extract::<Bytes>(message)?;
     let receiver_puzzle_hash_ptr = ctx.alloc(&receiver_puzzle_hash)?;
     let p2_delegated_puzzle = ctx.alloc(&clvm_quote!(Conditions::new().send_message(
         18,
-        message.to_bytes().unwrap().into(),
+        message,
         vec![receiver_puzzle_hash_ptr]
     )))?;
 
