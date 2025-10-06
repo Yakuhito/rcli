@@ -47,6 +47,7 @@ pub async fn cli_revoke_bulk(
 
     let mut excluded_puzzle_hashes = Vec::new();
     for address in exclude_addresses.split(',') {
+        println!("Excluding address: {}", address);
         let puzzle_hash = Address::decode(address)?.puzzle_hash;
         excluded_puzzle_hashes.push(puzzle_hash);
     }
